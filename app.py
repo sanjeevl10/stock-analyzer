@@ -69,6 +69,12 @@ if os.path.exists("./data/vectorstore"):
 else:
     print("Indexing Files")
     os.makedirs("./data/vectorstore", exist_ok=True)
+    for i in range(0, len(split_documents), 32):
+        if i == 0:
+            vectorstore = FAISS.from_documents(split_documents[i:i+32], hf_embeddings)
+            continue
+        vectorstore.add_documents(split_documents[i:i+32])
+    vectorstore.save_local("./data/vectorstore")
     
     ### 4. INDEX FILES
     ### NOTE: REMEMBER TO BATCH THE DOCUMENTS WITH MAXIMUM BATCH SIZE = 32
