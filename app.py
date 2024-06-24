@@ -6,12 +6,10 @@ from langchain_huggingface import HuggingFaceEndpoint
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
+from langchain.document_loaders import PyMuPDFLoader
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_core.prompts import PromptTemplate
-from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import RunnablePassthrough
 from langchain.schema.runnable.config import RunnableConfig
-from pathlib import Path
 
 # GLOBAL SCOPE - ENTIRE APPLICATION HAS ACCESS TO VALUES SET IN THIS SCOPE #
 # ---- ENV VARIABLES ---- # 
@@ -38,10 +36,13 @@ HF_TOKEN = os.environ["HF_TOKEN"]
 3. Load HuggingFace Embeddings (remember to use the URL we set above)
 4. Index Files if they do not exist, otherwise load the vectorstore
 """
-### 1. CREATE TEXT LOADER AND LOAD DOCUMENTS
-### NOTE: PAY ATTENTION TO THE PATH THEY ARE IN. 
-text_loader = TextLoader("data/paul_graham_essays.txt")
-documents = text_loader.load()
+# Loop through all the pdf documents in the folder data
+def load_pdfdocuments(self,path: str):
+    self.documents = []
+    return PyMuPDFLoader("data/airbnb-10k.pdf").load()
+
+#Load the Pdf Documents from airbnb-10k    
+documents = load_pdfdocuments()
 
 ### 2. CREATE TEXT SPLITTER AND SPLIT DOCUMENTS
 text_splitter = RecursiveCharacterTextSplitter(
@@ -131,10 +132,10 @@ def rename(original_author: str):
     """
     This function can be used to rename the 'author' of a message. 
 
-    In this case, we're overriding the 'Assistant' author to be 'Paul Graham Essay Bot'.
+    In this case, we're overriding the 'Assistant' author to be 'AirBnb LLM Assistant'.
     """
     rename_dict = {
-        "Assistant" : "Paul Graham Essay Bot"
+        "Assistant" : "AirBnB LLM Assitant"
     }
     return rename_dict.get(original_author, original_author)
 
