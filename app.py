@@ -13,10 +13,6 @@ from langchain.schema.runnable import RunnablePassthrough
 from langchain.schema.runnable.config import RunnableConfig
 from pathlib import Path
 
-DATA_DIR = "./data" 
-VECTORSTORE_DIR = os.path.join(DATA_DIR, "vectorstore") 
-VECTORSTORE_PATH = os.path.join(VECTORSTORE_DIR, "index.faiss")
-
 # GLOBAL SCOPE - ENTIRE APPLICATION HAS ACCESS TO VALUES SET IN THIS SCOPE #
 # ---- ENV VARIABLES ---- # 
 """
