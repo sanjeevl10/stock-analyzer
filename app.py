@@ -11,6 +11,11 @@ from langchain_core.prompts import PromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.schema.runnable.config import RunnableConfig
+from pathlib import Path
+
+DATA_DIR = "./data" 
+VECTORSTORE_DIR = os.path.join(DATA_DIR, "vectorstore") 
+VECTORSTORE_PATH = os.path.join(VECTORSTORE_DIR, "index.faiss")
 
 # GLOBAL SCOPE - ENTIRE APPLICATION HAS ACCESS TO VALUES SET IN THIS SCOPE #
 # ---- ENV VARIABLES ---- # 
@@ -58,9 +63,13 @@ hf_embeddings = HuggingFaceEndpointEmbeddings(
     huggingfacehub_api_token=HF_TOKEN,
 )
 
-if os.path.exists("./data/vectorstore"):
+vectordb = os.path.join("./data", "vectorstore") 
+vectordbfile = os.path.join(VECTORSTORE_DIR, "index.faiss")
+
+
+if os.path.exists(vectordbfile):
     vectorstore = FAISS.load_local(
-        "./data/vectorstore", 
+        vectordb, 
         hf_embeddings, 
         allow_dangerous_deserialization=True # this is necessary to load the vectorstore from disk as it's stored as a `.pkl` file.
     )
@@ -68,18 +77,19 @@ if os.path.exists("./data/vectorstore"):
     print("Loaded Vectorstore")
 else:
     print("Indexing Files")
-    os.makedirs("./data/vectorstore", exist_ok=True)
+    os.makedirs(vectordb, exist_ok=True)
     for i in range(0, len(split_documents), 32):
         if i == 0:
             vectorstore = FAISS.from_documents(split_documents[i:i+32], hf_embeddings)
             continue
         vectorstore.add_documents(split_documents[i:i+32])
-    vectorstore.save_local("./data/vectorstore")
+    vectorstore.save_local(vectordb)
+    hf_retriever = vectorstore.as_retriever()
     
     ### 4. INDEX FILES
     ### NOTE: REMEMBER TO BATCH THE DOCUMENTS WITH MAXIMUM BATCH SIZE = 32
 
-hf_retriever = vectorstore.as_retriever()
+
 
 # -- AUGMENTED -- #
 """
