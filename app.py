@@ -60,7 +60,7 @@ hf_embeddings = HuggingFaceEndpointEmbeddings(
 )
 
 vectordb = os.path.join("./data", "vectorstore") 
-vectordbfile = os.path.join(VECTORSTORE_DIR, "index.faiss")
+vectordbfile = os.path.join(vectordb, "index.faiss")
 
 
 if os.path.exists(vectordbfile):
