@@ -5,9 +5,8 @@ from operator import itemgetter
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.document_loaders import PyMuPDFLoader
-from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_core.prompts import PromptTemplate
-from langchain_openai.embeddings import OpenAI
+from langchain_community.embeddings.openai import OpenAIEmbeddings
 from langchain.schema.runnable.config import RunnableConfig
 from langchain_community.vectorstores import Qdrant
 
@@ -49,7 +48,7 @@ text_splitter = RecursiveCharacterTextSplitter(
 split_documents = text_splitter.split_documents(documents)
 
 ### 3. LOAD open ai EMBEDDINGS
-embeddings = OpenAI(OPENAPI_API_KEY=OPENAPI_KEY,model="text-embedding-ada-002")
+embeddings = OpenAIEmbeddings(OPENAPI_API_KEY=OPENAPI_KEY,model="text-embedding-ada-002")
 
 #Initialize the Vector Store
 if os.path.exists("./vectorstore"):
