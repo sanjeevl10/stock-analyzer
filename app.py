@@ -3,11 +3,11 @@ import chainlit as cl
 from dotenv import load_dotenv
 from operator import itemgetter
 from langchain_huggingface import HuggingFaceEndpoint
-from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.document_loaders import PyMuPDFLoader
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_core.prompts import PromptTemplate
+from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain.schema.runnable.config import RunnableConfig
 from langchain_community.vectorstores import Qdrant
 
@@ -27,6 +27,7 @@ We will load our environment variables here.
 HF_LLM_ENDPOINT = os.environ["HF_LLM_ENDPOINT"]
 HF_EMBED_ENDPOINT = os.environ["HF_EMBED_ENDPOINT"]
 HF_TOKEN = os.environ["HF_TOKEN"]
+OPENAPI_API_KEY = os.environ["OPENAI_API_KEY"]
 
 # ---- GLOBAL DECLARATIONS ---- #
 
@@ -47,20 +48,15 @@ text_splitter = RecursiveCharacterTextSplitter(
 )
 split_documents = text_splitter.split_documents(documents)
 
-### 3. LOAD HUGGINGFACE EMBEDDINGS
-hf_embeddings = HuggingFaceEndpointEmbeddings(
-    model=HF_EMBED_ENDPOINT,
-    task="feature-extraction",
-    huggingfacehub_api_token=HF_TOKEN,
-)
+### 3. LOAD open ai EMBEDDINGS
+embeddings = OpenAIEmbeddings()
 
 #Initialize the Vector Store
 if os.path.exists("./vectorstore"):
     vectorstore = Qdrant.from_existing_collection(
+        embeddings = embeddings,
         path = "./vectorstore", 
-        embeddings = hf_embeddings,
         collection_name = "airbnb-10k",
-        batch_size=32,
     )
     hf_retriever = vectorstore.as_retriever()
 else:
@@ -68,11 +64,10 @@ else:
     ### 4. INDEX FILES
     ### NOTE: REMEMBER TO BATCH THE DOCUMENTS WITH MAXIMUM BATCH SIZE = 32
     vectorstore = Qdrant.from_documents(
-        documents=split_documents,
-        embedding=hf_embeddings,
+        split_documents,
+        embeddings,
         path= "./vectorstore",
         collection_name="airbnb-10k",
-        batch_size=32,
     )
     hf_retriever = vectorstore.as_retriever()
     
