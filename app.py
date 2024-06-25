@@ -7,7 +7,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.document_loaders import PyMuPDFLoader
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_core.prompts import PromptTemplate
-from langchain_openai.embeddings import OpenAIEmbeddings
+from openai import OpenAI
 from langchain.schema.runnable.config import RunnableConfig
 from langchain_community.vectorstores import Qdrant
 
@@ -43,13 +43,13 @@ documents = PyMuPDFLoader("data/airbnb-10k.pdf").load()
 
 ### 2. CREATE TEXT SPLITTER AND SPLIT DOCUMENTS
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=250,
+    chunk_size=1000,
     chunk_overlap=0
 )
 split_documents = text_splitter.split_documents(documents)
 
 ### 3. LOAD open ai EMBEDDINGS
-embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
+embeddings = OpenAI(model="text-embedding-ada-002")
 
 #Initialize the Vector Store
 if os.path.exists("./vectorstore"):
@@ -101,7 +101,7 @@ rag_prompt = PromptTemplate.from_template(RAG_PROMPT_TEMPLATE)
 ### 1. CREATE HUGGINGFACE ENDPOINT FOR LLM
 hf_llm = HuggingFaceEndpoint(
     endpoint_url=HF_LLM_ENDPOINT,
-    max_new_tokens=256,
+    max_new_tokens=512,
     top_k=10,
     top_p=0.95,
     typical_p=0.95,
