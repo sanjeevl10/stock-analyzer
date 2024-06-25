@@ -5,12 +5,10 @@ from operator import itemgetter
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
 from langchain.document_loaders import PyMuPDFLoader
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain.schema.runnable.config import RunnableConfig
-from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import Qdrant
 
 
@@ -41,9 +39,6 @@ HF_TOKEN = os.environ["HF_TOKEN"]
 """
 #Load the Pdf Documents from airbnb-10k    
 documents = PyMuPDFLoader("data/airbnb-10k.pdf").load()
-
-#use the embedding model
-embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
 
 ### 2. CREATE TEXT SPLITTER AND SPLIT DOCUMENTS
 text_splitter = RecursiveCharacterTextSplitter(
