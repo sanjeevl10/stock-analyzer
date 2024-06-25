@@ -5,7 +5,7 @@ from operator import itemgetter
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.document_loaders import UnstructuredPDFLoader
+from langchain.document_loaders import PyMuPDFLoader
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain.schema.runnable.config import RunnableConfig
@@ -38,7 +38,7 @@ HF_TOKEN = os.environ["HF_TOKEN"]
 4. Index Files if they do not exist, otherwise load the vectorstore
 """
 #Load the Pdf Documents from airbnb-10k    
-documents = UnstructuredPDFLoader("data/airbnb-10k.pdf").load()
+documents = PyMuPDFLoader("data/airbnb-10k.pdf").load()
 
 ### 2. CREATE TEXT SPLITTER AND SPLIT DOCUMENTS
 text_splitter = RecursiveCharacterTextSplitter(
