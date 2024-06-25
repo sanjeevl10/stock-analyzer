@@ -108,12 +108,13 @@ rag_prompt = PromptTemplate.from_template(RAG_PROMPT_TEMPLATE)
 ### 1. CREATE HUGGINGFACE ENDPOINT FOR LLM
 hf_llm = HuggingFaceEndpoint(
     endpoint_url=HF_LLM_ENDPOINT,
-    max_new_tokens=512,
+    max_new_tokens=8192,
     top_k=10,
     top_p=0.95,
     typical_p=0.95,
     temperature=0.01,
     repetition_penalty=1.03,
+    streaming=True,
     huggingfacehub_api_token=os.environ["HF_TOKEN"]
 )
 
