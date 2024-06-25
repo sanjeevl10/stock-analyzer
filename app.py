@@ -9,7 +9,7 @@ from langchain.document_loaders import PyMuPDFLoader
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain.schema.runnable.config import RunnableConfig
-from langchain_community.vectorstores import Qdrant
+from langchain_community.vectorstores import FAISS
 
 
 # GLOBAL SCOPE - ENTIRE APPLICATION HAS ACCESS TO VALUES SET IN THIS SCOPE #
@@ -56,31 +56,25 @@ hf_embeddings = HuggingFaceEndpointEmbeddings(
     huggingfacehub_api_token=HF_TOKEN,
 )
 
-vectordbfile = "./data/vectorstore"
-
-if os.path.exists(vectordbfile):
-    vectorstore = Qdrant.from_existing_collection(
-        embedding=hf_embeddings,
-        path=vectordbfile,
-        collection_name="airbnb-10k",
+#Initialize the Vector Store
+if os.path.exists("./data/vectorstore"):
+    vectorstore = FAISS.load_local(
+        "./data/vectorstore", 
+        hf_embeddings, 
+        allow_dangerous_deserialization=True # this is necessary to load the vectorstore from disk as it's stored as a `.pkl` file.
     )
-    hf_retriever = vectorstore.as_retriever()
 else:
-    print("Indexing Files")
-    os.makedirs(vectordbfile, exist_ok=True)
-    vectorstore = Qdrant.from_documents(
-        documents=split_documents,
-        embedding=hf_embeddings,
-        path=vectordbfile,
-        collection_name="airbnb-10k",
-    )
-    hf_retriever = vectorstore.as_retriever()
-    
+    os.makedirs("./data/vectorstore", exist_ok=True)
     ### 4. INDEX FILES
     ### NOTE: REMEMBER TO BATCH THE DOCUMENTS WITH MAXIMUM BATCH SIZE = 32
-
-
-
+    for i in range(0, len(split_documents), 32):
+        if i == 0:
+            vectorstore = FAISS.from_documents(split_documents[i:i+32], hf_embeddings)
+            continue
+        vectorstore.add_documents(split_documents[i:i+32])
+    vectorstore.save_local("./data/vectorstore")
+hf_retriever = vectorstore.as_retriever()
+    
 # -- AUGMENTED -- #
 """
 1. Define a String Template
