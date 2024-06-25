@@ -5,7 +5,7 @@ from operator import itemgetter
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.document_loaders import PyMuPDFLoader
+from langchain.document_loaders import UnstructuredPDFLoader
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain.schema.runnable.config import RunnableConfig
@@ -38,7 +38,7 @@ HF_TOKEN = os.environ["HF_TOKEN"]
 4. Index Files if they do not exist, otherwise load the vectorstore
 """
 #Load the Pdf Documents from airbnb-10k    
-documents = PyMuPDFLoader("data/airbnb-10k.pdf").load()
+documents = UnstructuredPDFLoader("data/airbnb-10k.pdf").load()
 
 ### 2. CREATE TEXT SPLITTER AND SPLIT DOCUMENTS
 text_splitter = RecursiveCharacterTextSplitter(
@@ -56,9 +56,7 @@ hf_embeddings = HuggingFaceEndpointEmbeddings(
     huggingfacehub_api_token=HF_TOKEN,
 )
 
-vectordbdir = "./data" 
-vectordbfile = os.path.join(vectordbdir, "/vectorstore")
-
+vectordbfile = "./data/vectorstore"
 
 if os.path.exists(vectordbfile):
     vectorstore = Qdrant.from_existing_collection(
@@ -70,12 +68,12 @@ if os.path.exists(vectordbfile):
 else:
     print("Indexing Files")
     os.makedirs(vectordbfile, exist_ok=True)
-    for i in range(0, len(split_documents), 32):
-        if i == 0:
-            vectorstore = Qdrant.from_documents(split_documents[i:i+32], hf_embeddings)
-            continue
-        vectorstore.add_documents(split_documents[i:i+32])
-    vectorstore.save_local(vectordbfile)
+    vectorstore = Qdrant.from_documents(
+        documents=split_documents,
+        embedding=hf_embeddings,
+        path=vectordbfile,
+        collection_name="airbnb-10k",
+    )
     hf_retriever = vectorstore.as_retriever()
     
     ### 4. INDEX FILES
