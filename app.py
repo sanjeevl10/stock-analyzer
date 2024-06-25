@@ -42,10 +42,8 @@ documents = PyMuPDFLoader("data/airbnb-10k.pdf").load()
 
 ### 2. CREATE TEXT SPLITTER AND SPLIT DOCUMENTS
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=500,
-    chunk_overlap=30,
-    length_function=len,
-    is_separator_regex=False,
+    chunk_size=250,
+    chunk_overlap=0
 )
 split_documents = text_splitter.split_documents(documents)
 
@@ -108,7 +106,7 @@ rag_prompt = PromptTemplate.from_template(RAG_PROMPT_TEMPLATE)
 ### 1. CREATE HUGGINGFACE ENDPOINT FOR LLM
 hf_llm = HuggingFaceEndpoint(
     endpoint_url=HF_LLM_ENDPOINT,
-    max_new_tokens=8192,
+    max_new_tokens=256,
     top_k=10,
     top_p=0.95,
     typical_p=0.95,
