@@ -9,7 +9,7 @@ from langchain.document_loaders import PyMuPDFLoader
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain.schema.runnable.config import RunnableConfig
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import Qdrant
 
 
 # GLOBAL SCOPE - ENTIRE APPLICATION HAS ACCESS TO VALUES SET IN THIS SCOPE #
@@ -42,7 +42,7 @@ documents = PyMuPDFLoader("data/airbnb-10k.pdf").load()
 
 ### 2. CREATE TEXT SPLITTER AND SPLIT DOCUMENTS
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,
+    chunk_size=500,
     chunk_overlap=30,
     length_function=len,
     is_separator_regex=False,
@@ -58,22 +58,25 @@ hf_embeddings = HuggingFaceEndpointEmbeddings(
 
 #Initialize the Vector Store
 if os.path.exists("./vectorstore"):
-    vectorstore = FAISS.load_local(
-        "./vectorstore", 
-        hf_embeddings, 
-        allow_dangerous_deserialization=True # this is necessary to load the vectorstore from disk as it's stored as a `.pkl` file.
+    vectorstore = Qdrant.from_existing_collection(
+        path = "./vectorstore", 
+        embeddings = hf_embeddings,
+        collection_name = "airbnb-10k",
+        batch_size=32,
     )
+    hf_retriever = vectorstore.as_retriever()
 else:
     os.makedirs("./vectorstore", exist_ok=True)
     ### 4. INDEX FILES
     ### NOTE: REMEMBER TO BATCH THE DOCUMENTS WITH MAXIMUM BATCH SIZE = 32
-    for i in range(0, len(split_documents), 32):
-        if i == 0:
-            vectorstore = FAISS.from_documents(split_documents[i:i+32], hf_embeddings)
-            continue
-        vectorstore.add_documents(split_documents[i:i+32])
-    vectorstore.save_local("./vectorstore")
-hf_retriever = vectorstore.as_retriever()
+    vectorstore = Qdrant.from_documents(
+        documents=split_documents,
+        embedding=hf_embeddings,
+        path= "./vectorstore",
+        collection_name="airbnb-10k",
+        batch_size=32,
+    )
+    hf_retriever = vectorstore.as_retriever()
     
 # -- AUGMENTED -- #
 """
