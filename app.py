@@ -49,7 +49,7 @@ text_splitter = RecursiveCharacterTextSplitter(
 split_documents = text_splitter.split_documents(documents)
 
 ### 3. LOAD open ai EMBEDDINGS
-embeddings = OpenAIEmbeddings()
+embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
 
 #Initialize the Vector Store
 if os.path.exists("./vectorstore"):
