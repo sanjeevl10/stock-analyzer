@@ -6,3 +6,4 @@ langchain_huggingface==0.0.3
 langchain_text_splitters==0.2.1
 python-dotenv==1.0.1
 faiss-cpu
+camelot-py[cv]==0.10.1

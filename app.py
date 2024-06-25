@@ -10,6 +10,9 @@ from langchain.document_loaders import PyMuPDFLoader
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain.schema.runnable.config import RunnableConfig
+from langchain_openai.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import Qdrant
+
 
 # GLOBAL SCOPE - ENTIRE APPLICATION HAS ACCESS TO VALUES SET IN THIS SCOPE #
 # ---- ENV VARIABLES ---- # 
@@ -36,13 +39,11 @@ HF_TOKEN = os.environ["HF_TOKEN"]
 3. Load HuggingFace Embeddings (remember to use the URL we set above)
 4. Index Files if they do not exist, otherwise load the vectorstore
 """
-# Loop through all the pdf documents in the folder data
-def load_pdfdocuments(self,path: str):
-    self.documents = []
-    return PyMuPDFLoader("data/airbnb-10k.pdf").load()
-
 #Load the Pdf Documents from airbnb-10k    
-documents = load_pdfdocuments()
+documents = PyMuPDFLoader("data/airbnb-10k.pdf").load()
+
+#use the embedding model
+embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
 
 ### 2. CREATE TEXT SPLITTER AND SPLIT DOCUMENTS
 text_splitter = RecursiveCharacterTextSplitter(
@@ -60,27 +61,26 @@ hf_embeddings = HuggingFaceEndpointEmbeddings(
     huggingfacehub_api_token=HF_TOKEN,
 )
 
-vectordb = os.path.join("./data", "vectorstore") 
-vectordbfile = os.path.join(vectordb, "index.faiss")
+vectordbdir = "./data" 
+vectordbfile = os.path.join(vectordbdir, "/vectorstore")
 
 
 if os.path.exists(vectordbfile):
-    vectorstore = FAISS.load_local(
-        vectordb, 
-        hf_embeddings, 
-        allow_dangerous_deserialization=True # this is necessary to load the vectorstore from disk as it's stored as a `.pkl` file.
+    vectorstore = Qdrant.from_existing_collection(
+        embedding=hf_embeddings,
+        path=vectordbfile,
+        collection_name="airbnb-10k",
     )
     hf_retriever = vectorstore.as_retriever()
-    print("Loaded Vectorstore")
 else:
     print("Indexing Files")
-    os.makedirs(vectordb, exist_ok=True)
+    os.makedirs(vectordbfile, exist_ok=True)
     for i in range(0, len(split_documents), 32):
         if i == 0:
-            vectorstore = FAISS.from_documents(split_documents[i:i+32], hf_embeddings)
+            vectorstore = Qdrant.from_documents(split_documents[i:i+32], hf_embeddings)
             continue
         vectorstore.add_documents(split_documents[i:i+32])
-    vectorstore.save_local(vectordb)
+    vectorstore.save_local(vectordbfile)
     hf_retriever = vectorstore.as_retriever()
     
     ### 4. INDEX FILES
@@ -132,10 +132,10 @@ def rename(original_author: str):
     """
     This function can be used to rename the 'author' of a message. 
 
-    In this case, we're overriding the 'Assistant' author to be 'AirBnb LLM Assistant'.
+    In this case, we're overriding the 'Assistant' author to be 'AirBnb Stock Analyzer'.
     """
     rename_dict = {
-        "Assistant" : "AirBnB LLM Assitant"
+        "Assistant" : "AirBnB Stock Analyzer"
     }
     return rename_dict.get(original_author, original_author)
 
