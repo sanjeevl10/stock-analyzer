@@ -60,10 +60,6 @@ text_splitter = RecursiveCharacterTextSplitter(
 
 chunks = text_splitter.split_documents(documents)
 
-#for chunk in chunks:
-#  print(chunk)
-#  print("----")
-
 ### 3. LOAD open ai EMBEDDINGS
 HF_EMBED_ENDPOINT = os.environ["HF_EMBED_ENDPOINT"]
 
@@ -176,4 +172,4 @@ async def main(message: cl.Message):
 
     response = lcel_rag_chain.invoke({"query" : message.content})
 
-    await cl.Message(content=response).send()
+    await cl.Message(content=response["response"]).send()
